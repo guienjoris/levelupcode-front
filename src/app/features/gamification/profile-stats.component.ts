@@ -208,30 +208,56 @@ import {
 
         <!-- Notification Settings -->
         <div class="p-6 sm:p-8 rounded-3xl bg-slate-800/40 border border-slate-700/80 shadow-lg space-y-4">
-          <div class="flex items-center justify-between">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="space-y-1">
               <h3 class="text-lg font-bold text-white flex items-center gap-2">
                 <svg lucideBell class="w-5 h-5 text-amber-400"></svg>
                 <span>Rappel quotidien de streak</span>
               </h3>
-              <p class="text-xs text-slate-400">
+              <p class="text-xs text-slate-400 max-w-xl">
                 Recevez un email à 19h00 pour ne jamais perdre votre série de jours actifs consécutifs.
               </p>
             </div>
 
-            <button
-              type="button"
-              (click)="toggleEmailReminder()"
-              class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-              [class.bg-indigo-600]="emailDailyReminder()"
-              [class.bg-slate-700]="!emailDailyReminder()"
-            >
+            <div class="flex items-center gap-3 shrink-0 self-start sm:self-center">
               <span
-                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-                [class.translate-x-5]="emailDailyReminder()"
-                [class.translate-x-0]="!emailDailyReminder()"
-              ></span>
-            </button>
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all duration-200"
+                [class.text-emerald-400]="emailDailyReminder()"
+                [class.bg-emerald-500/10]="emailDailyReminder()"
+                [class.border-emerald-500/30]="emailDailyReminder()"
+                [class.text-slate-400]="!emailDailyReminder()"
+                [class.bg-slate-800]="!emailDailyReminder()"
+                [class.border-slate-700]="!emailDailyReminder()"
+              >
+                <span
+                  class="w-1.5 h-1.5 rounded-full"
+                  [class.bg-emerald-400]="emailDailyReminder()"
+                  [class.animate-pulse]="emailDailyReminder()"
+                  [class.bg-slate-500]="!emailDailyReminder()"
+                ></span>
+                {{ emailDailyReminder() ? 'Activé (19h00)' : 'Désactivé' }}
+              </span>
+
+              <button
+                type="button"
+                role="switch"
+                [attr.aria-checked]="emailDailyReminder()"
+                [disabled]="isUpdatingReminder()"
+                (click)="toggleEmailReminder()"
+                class="relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full px-1 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900 border disabled:opacity-50 disabled:cursor-not-allowed"
+                [class.bg-indigo-600]="emailDailyReminder()"
+                [class.border-indigo-400]="emailDailyReminder()"
+                [class.shadow-[0_0_12px_rgba(99,102,241,0.4)]]="emailDailyReminder()"
+                [class.bg-slate-900]="!emailDailyReminder()"
+                [class.border-slate-700]="!emailDailyReminder()"
+                aria-label="Activer ou désactiver le rappel quotidien de streak"
+              >
+                <span
+                  class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md transition-all duration-200 ease-in-out"
+                  [style.transform]="emailDailyReminder() ? 'translateX(20px)' : 'translateX(0px)'"
+                ></span>
+              </button>
+            </div>
           </div>
         </div>
       }
@@ -248,6 +274,7 @@ export class ProfileStatsComponent implements OnInit {
   readonly stats = signal<UserStats | null>(null);
   readonly isLoading = signal<boolean>(true);
   readonly emailDailyReminder = signal<boolean>(true);
+  readonly isUpdatingReminder = signal<boolean>(false);
 
   userInitial(): string {
     const user = this.authService.currentUser();
@@ -264,6 +291,11 @@ export class ProfileStatsComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const user = this.authService.currentUser();
+    if (user && typeof user.emailDailyReminder === 'boolean') {
+      this.emailDailyReminder.set(user.emailDailyReminder);
+    }
+
     this.gamificationService.getMyStats().subscribe({
       next: (data) => {
         this.stats.set(data);
@@ -276,15 +308,29 @@ export class ProfileStatsComponent implements OnInit {
   }
 
   toggleEmailReminder(): void {
-    const nextVal = !this.emailDailyReminder();
+    if (this.isUpdatingReminder()) return;
+
+    const previousVal = this.emailDailyReminder();
+    const nextVal = !previousVal;
+
+    this.isUpdatingReminder.set(true);
+    // Optimistic UI update
     this.emailDailyReminder.set(nextVal);
 
     this.http
-      .patch(`${environment.apiUrl}/notifications/preferences`, {
-        emailDailyReminder: nextVal,
-      })
+      .patch<{ success: boolean; emailDailyReminder: boolean }>(
+        `${environment.apiUrl}/notifications/preferences`,
+        { emailDailyReminder: nextVal }
+      )
       .subscribe({
-        next: () => {
+        next: (res) => {
+          this.isUpdatingReminder.set(false);
+          if (typeof res?.emailDailyReminder === 'boolean') {
+            this.emailDailyReminder.set(res.emailDailyReminder);
+          }
+          this.authService.currentUser.update((u) =>
+            u ? { ...u, emailDailyReminder: nextVal } : null
+          );
           this.toast.success(
             nextVal
               ? 'Rappel quotidien de streak activé (19h00).'
@@ -292,6 +338,9 @@ export class ProfileStatsComponent implements OnInit {
           );
         },
         error: () => {
+          this.isUpdatingReminder.set(false);
+          // Rollback to previous state on error
+          this.emailDailyReminder.set(previousVal);
           this.toast.error('Erreur lors de la mise à jour de vos préférences.');
         },
       });

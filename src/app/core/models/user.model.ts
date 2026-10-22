@@ -5,6 +5,7 @@ export interface User {
   role: 'USER' | 'ADMIN';
   isSupporter?: boolean;
   avatarUrl?: string;
+  emailDailyReminder?: boolean;
 }
 
 export interface UserProfile extends User {

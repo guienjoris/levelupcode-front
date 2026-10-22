@@ -208,7 +208,7 @@ import {
 
         <!-- Notification Settings -->
         <div class="p-6 sm:p-8 rounded-3xl bg-slate-800/40 border border-slate-700/80 shadow-lg space-y-4">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-center justify-between gap-4">
             <div class="space-y-1">
               <h3 class="text-lg font-bold text-white flex items-center gap-2">
                 <svg lucideBell class="w-5 h-5 text-amber-400"></svg>
@@ -219,45 +219,21 @@ import {
               </p>
             </div>
 
-            <div class="flex items-center gap-3 shrink-0 self-start sm:self-center">
+            <button
+              type="button"
+              role="switch"
+              [attr.aria-checked]="emailDailyReminder()"
+              (click)="toggleEmailReminder()"
+              class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+              [class.bg-indigo-600]="emailDailyReminder()"
+              [class.bg-slate-700]="!emailDailyReminder()"
+              aria-label="Rappel quotidien de streak"
+            >
               <span
-                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all duration-200"
-                [class.text-emerald-400]="emailDailyReminder()"
-                [class.bg-emerald-500/10]="emailDailyReminder()"
-                [class.border-emerald-500/30]="emailDailyReminder()"
-                [class.text-slate-400]="!emailDailyReminder()"
-                [class.bg-slate-800]="!emailDailyReminder()"
-                [class.border-slate-700]="!emailDailyReminder()"
-              >
-                <span
-                  class="w-1.5 h-1.5 rounded-full"
-                  [class.bg-emerald-400]="emailDailyReminder()"
-                  [class.animate-pulse]="emailDailyReminder()"
-                  [class.bg-slate-500]="!emailDailyReminder()"
-                ></span>
-                {{ emailDailyReminder() ? 'Activé (19h00)' : 'Désactivé' }}
-              </span>
-
-              <button
-                type="button"
-                role="switch"
-                [attr.aria-checked]="emailDailyReminder()"
-                [disabled]="isUpdatingReminder()"
-                (click)="toggleEmailReminder()"
-                class="relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full px-1 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900 border disabled:opacity-50 disabled:cursor-not-allowed"
-                [class.bg-indigo-600]="emailDailyReminder()"
-                [class.border-indigo-400]="emailDailyReminder()"
-                [class.shadow-[0_0_12px_rgba(99,102,241,0.4)]]="emailDailyReminder()"
-                [class.bg-slate-900]="!emailDailyReminder()"
-                [class.border-slate-700]="!emailDailyReminder()"
-                aria-label="Activer ou désactiver le rappel quotidien de streak"
-              >
-                <span
-                  class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md transition-all duration-200 ease-in-out"
-                  [style.transform]="emailDailyReminder() ? 'translateX(20px)' : 'translateX(0px)'"
-                ></span>
-              </button>
-            </div>
+                class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out"
+                [style.transform]="emailDailyReminder() ? 'translateX(20px)' : 'translateX(0px)'"
+              ></span>
+            </button>
           </div>
         </div>
       }

@@ -224,14 +224,16 @@ import {
               role="switch"
               [attr.aria-checked]="emailDailyReminder()"
               (click)="toggleEmailReminder()"
-              class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+              aria-label="Rappel quotidien de streak"
+              class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900"
               [class.bg-indigo-600]="emailDailyReminder()"
               [class.bg-slate-700]="!emailDailyReminder()"
-              aria-label="Rappel quotidien de streak"
             >
               <span
-                class="pointer-events-none absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-all duration-200 ease-in-out"
-                [style.left]="emailDailyReminder() ? '22px' : '2px'"
+                aria-hidden="true"
+                class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out"
+                [class.translate-x-5]="emailDailyReminder()"
+                [class.translate-x-0]="!emailDailyReminder()"
               ></span>
             </button>
           </div>

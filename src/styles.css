@@ -1,0 +1,62 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-brand-bg: #0f172a;
+  --color-brand-surface: #1e293b;
+  --color-brand-surface-hover: #26354a;
+  --color-brand-border: #334155;
+  --color-brand-border-focus: #6366f1;
+  --color-streak-amber: #f59e0b;
+  --color-streak-orange: #ea580c;
+  --color-supporter-gold: #fbbf24;
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html, body {
+  background-color: #0f172a;
+  color: #f1f5f9;
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Glassmorphism custom classes */
+.glass-panel {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(51, 65, 85, 0.6);
+}
+
+.glass-nav {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+/* Scrollbar stylisée */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}

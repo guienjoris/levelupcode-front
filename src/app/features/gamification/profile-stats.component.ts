@@ -230,8 +230,9 @@ import {
               aria-label="Rappel quotidien de streak"
             >
               <span
-                class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out"
-                [style.transform]="emailDailyReminder() ? 'translateX(20px)' : 'translateX(0px)'"
+                class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md transition-all duration-200 ease-in-out"
+                [class.translate-x-5]="emailDailyReminder()"
+                [class.translate-x-0]="!emailDailyReminder()"
               ></span>
             </button>
           </div>
@@ -250,7 +251,6 @@ export class ProfileStatsComponent implements OnInit {
   readonly stats = signal<UserStats | null>(null);
   readonly isLoading = signal<boolean>(true);
   readonly emailDailyReminder = signal<boolean>(true);
-  readonly isUpdatingReminder = signal<boolean>(false);
 
   userInitial(): string {
     const user = this.authService.currentUser();
@@ -284,13 +284,7 @@ export class ProfileStatsComponent implements OnInit {
   }
 
   toggleEmailReminder(): void {
-    if (this.isUpdatingReminder()) return;
-
-    const previousVal = this.emailDailyReminder();
-    const nextVal = !previousVal;
-
-    this.isUpdatingReminder.set(true);
-    // Optimistic UI update
+    const nextVal = !this.emailDailyReminder();
     this.emailDailyReminder.set(nextVal);
 
     this.http
@@ -300,23 +294,18 @@ export class ProfileStatsComponent implements OnInit {
       )
       .subscribe({
         next: (res) => {
-          this.isUpdatingReminder.set(false);
           if (typeof res?.emailDailyReminder === 'boolean') {
             this.emailDailyReminder.set(res.emailDailyReminder);
           }
-          this.authService.currentUser.update((u) =>
-            u ? { ...u, emailDailyReminder: nextVal } : null
-          );
           this.toast.success(
             nextVal
               ? 'Rappel quotidien de streak activé (19h00).'
               : 'Rappel quotidien désactivé.'
           );
         },
-        error: () => {
-          this.isUpdatingReminder.set(false);
-          // Rollback to previous state on error
-          this.emailDailyReminder.set(previousVal);
+        error: (err) => {
+          console.error('Erreur mise à jour streak reminder:', err);
+          this.emailDailyReminder.set(!nextVal);
           this.toast.error('Erreur lors de la mise à jour de vos préférences.');
         },
       });

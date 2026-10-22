@@ -230,9 +230,8 @@ import {
               aria-label="Rappel quotidien de streak"
             >
               <span
-                class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md transition-all duration-200 ease-in-out"
-                [class.translate-x-5]="emailDailyReminder()"
-                [class.translate-x-0]="!emailDailyReminder()"
+                class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md switch-knob"
+                [class.active]="emailDailyReminder()"
               ></span>
             </button>
           </div>

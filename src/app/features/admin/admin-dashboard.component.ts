@@ -103,13 +103,20 @@ import {
             </button>
           </div>
 
+          @if (reportsError()) {
+            <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-sm flex items-center gap-2.5">
+              <svg lucideAlertTriangle class="w-5 h-5 shrink-0"></svg>
+              <span>{{ reportsError() }}</span>
+            </div>
+          }
+
           @if (isLoadingReports()) {
             <div class="space-y-3">
               @for (i of [1, 2, 3]; track i) {
                 <div class="h-20 bg-slate-800/40 rounded-xl animate-pulse"></div>
               }
             </div>
-          } @else if (reports().length === 0) {
+          } @else if (reports().length === 0 && !reportsError()) {
             <div class="p-12 text-center rounded-2xl bg-slate-800/20 border border-slate-800 text-slate-400 text-sm">
               🎉 Aucun signalement en attente. Tout le contenu pédagogique est opérationnel !
             </div>
@@ -216,9 +223,11 @@ export class AdminDashboardComponent implements OnInit {
   readonly reports = signal<AdminReport[]>([]);
   readonly adminCategories = signal<Category[]>([]);
   readonly isLoadingReports = signal<boolean>(false);
+  readonly reportsError = signal<string | null>(null);
 
   pendingReportsCount(): number {
-    return this.reports().filter((r) => r.status === 'PENDING').length;
+    const list = this.reports();
+    return Array.isArray(list) ? list.filter((r) => r.status === 'PENDING').length : 0;
   }
 
   ngOnInit(): void {
@@ -228,23 +237,34 @@ export class AdminDashboardComponent implements OnInit {
 
   loadReports(): void {
     this.isLoadingReports.set(true);
-    this.http.get<AdminReport[]>(`${environment.apiUrl}/admin/reports`).subscribe({
-      next: (data) => {
-        this.reports.set(data || []);
+    this.reportsError.set(null);
+    this.http.get<any>(`${environment.apiUrl}/admin/reports`).subscribe({
+      next: (res) => {
+        const items: AdminReport[] = Array.isArray(res) ? res : res?.data || [];
+        this.reports.set(items);
         this.isLoadingReports.set(false);
       },
-      error: () => {
+      error: (err) => {
         this.isLoadingReports.set(false);
+        this.reports.set([]);
+        if (err.status === 403) {
+          this.reportsError.set('Accès restreint : votre compte n’a pas le rôle ADMIN.');
+        } else {
+          this.reportsError.set(err.error?.message || 'Erreur lors du chargement des signalements.');
+        }
       },
     });
   }
 
   loadCategories(): void {
-    this.http.get<Category[]>(`${environment.apiUrl}/admin/categories`).subscribe({
-      next: (data) => {
-        this.adminCategories.set(data || []);
+    this.http.get<any>(`${environment.apiUrl}/admin/categories`).subscribe({
+      next: (res) => {
+        const items: Category[] = Array.isArray(res) ? res : res?.data || [];
+        this.adminCategories.set(items);
       },
-      error: () => {},
+      error: () => {
+        this.adminCategories.set([]);
+      },
     });
   }
 

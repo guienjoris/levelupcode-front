@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { LessonService } from '../../core/services/lesson.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -12,7 +12,6 @@ import {
   LucideAlertTriangle,
   LucideHelpCircle,
   LucideSparkles,
-  LucideBookOpen,
   LucideCheck,
 } from '@lucide/angular';
 
@@ -35,13 +34,13 @@ import {
       
       <!-- Top Navigation & Breadcrumb -->
       <div class="flex items-center justify-between">
-        @if (lesson()?.category) {
+        @if (categorySlug()) {
           <a
-            [routerLink]="['/catalog', lesson()!.category.slug]"
+            [routerLink]="['/catalog', categorySlug()]"
             class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400 hover:text-white transition-colors"
           >
             <svg lucideArrowLeft class="w-4 h-4"></svg>
-            <span>Retour à {{ lesson()!.category.name }}</span>
+            <span>Retour à {{ categoryDisplayName() }}</span>
           </a>
         } @else {
           <a
@@ -79,7 +78,7 @@ import {
           <header class="space-y-4 pb-6 border-b border-slate-700/60">
             <div class="flex flex-wrap items-center gap-2">
               <span class="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                {{ lesson()!.category.name }}
+                {{ categoryDisplayName() }}
               </span>
 
               <span
@@ -113,7 +112,7 @@ import {
 
           <!-- Markdown Content Body -->
           <div class="py-2">
-            <app-markdown-viewer [content]="lesson()!.contentMarkdown"></app-markdown-viewer>
+            <app-markdown-viewer [content]="lesson()!.contentMarkdown || ''"></app-markdown-viewer>
           </div>
 
           <!-- Bottom Action Bar -->
@@ -147,9 +146,9 @@ import {
             </button>
 
             <!-- Quiz CTA if attached -->
-            @if (lesson()!.quiz) {
+            @if (quizId()) {
               <a
-                [routerLink]="['/quizzes', lesson()!.quiz!.id]"
+                [routerLink]="['/quizzes', quizId()]"
                 class="w-full sm:w-auto px-6 py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-lg shadow-indigo-600/25 transition-all flex items-center justify-center gap-2"
               >
                 <svg lucideHelpCircle class="w-5 h-5"></svg>
@@ -186,6 +185,23 @@ export class LessonDetailComponent implements OnInit {
   readonly isCompleting = signal<boolean>(false);
   readonly isReportModalOpen = signal<boolean>(false);
 
+  readonly categoryDisplayName = computed(() => {
+    const l = this.lesson();
+    return l?.categoryName || l?.category?.name || 'Catégorie';
+  });
+
+  readonly categorySlug = computed(() => {
+    const l = this.lesson();
+    if (l?.category?.slug) return l.category.slug;
+    if (l?.categoryName) return l.categoryName.toLowerCase();
+    return '';
+  });
+
+  readonly quizId = computed(() => {
+    const l = this.lesson();
+    return l?.quizId || l?.quiz?.id || null;
+  });
+
   ngOnInit(): void {
     const slug = this.route.snapshot.paramMap.get('idOrSlug') || '';
     this.lessonService.getLesson(slug).subscribe({
@@ -193,8 +209,9 @@ export class LessonDetailComponent implements OnInit {
         this.lesson.set(data);
         this.isLoading.set(false);
       },
-      error: () => {
+      error: (err) => {
         this.isLoading.set(false);
+        this.toast.error(err.error?.message || 'Impossible de charger la leçon.');
       },
     });
   }
@@ -218,7 +235,8 @@ export class LessonDetailComponent implements OnInit {
         });
 
         // Trigger streak & XP toast
-        this.toast.streak(res.newStreak, res.xpEarned);
+        const streak = res.currentStreak ?? res.newStreak ?? 1;
+        this.toast.streak(streak, res.xpEarned);
       },
       error: (err) => {
         this.isCompleting.set(false);

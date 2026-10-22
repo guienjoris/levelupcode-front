@@ -226,14 +226,14 @@ import {
               (click)="toggleEmailReminder()"
               aria-label="Rappel quotidien de streak"
               class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900"
-              [class.bg-indigo-600]="emailDailyReminder()"
-              [class.bg-slate-700]="!emailDailyReminder()"
+              [class.bg-indigo-600]="emailDailyReminder() === true"
+              [class.bg-slate-700]="emailDailyReminder() === false"
             >
               <span
                 aria-hidden="true"
                 class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out"
-                [class.translate-x-5]="emailDailyReminder()"
-                [class.translate-x-0]="!emailDailyReminder()"
+                [class.translate-x-5]="emailDailyReminder() === true"
+                [class.translate-x-0]="emailDailyReminder() === false"
               ></span>
             </button>
           </div>

@@ -209,7 +209,7 @@ import {
         <!-- Notification Settings -->
         <div class="p-6 sm:p-8 rounded-3xl bg-slate-800/40 border border-slate-700/80 shadow-lg space-y-4">
           <div class="flex items-center justify-between gap-4">
-            <div class="space-y-1">
+            <label for="emailReminder" class="space-y-1 cursor-pointer select-none">
               <h3 class="text-lg font-bold text-white flex items-center gap-2">
                 <svg lucideBell class="w-5 h-5 text-amber-400"></svg>
                 <span>Rappel quotidien de streak</span>
@@ -217,21 +217,15 @@ import {
               <p class="text-xs text-slate-400 max-w-xl">
                 Recevez un email à 19h00 pour ne jamais perdre votre série de jours actifs consécutifs.
               </p>
-            </div>
+            </label>
 
-            <button
-              type="button"
-              role="switch"
-              [attr.aria-checked]="emailDailyReminder()"
-              (click)="toggleEmailReminder()"
-              aria-label="Rappel quotidien de streak"
-              class="group relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full bg-slate-700 p-0.5 transition-colors duration-200 ease-in-out aria-checked:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900"
-            >
-              <span
-                aria-hidden="true"
-                class="pointer-events-none inline-block h-5 w-5 translate-x-0 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out group-aria-checked:translate-x-5"
-              ></span>
-            </button>
+            <input
+              id="emailReminder"
+              type="checkbox"
+              [checked]="emailDailyReminder()"
+              (change)="toggleEmailReminder($event)"
+              class="w-5 h-5 rounded-md border border-slate-600 bg-slate-900 text-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900 cursor-pointer accent-indigo-600 transition-colors"
+            />
           </div>
         </div>
       }
@@ -280,8 +274,9 @@ export class ProfileStatsComponent implements OnInit {
     });
   }
 
-  toggleEmailReminder(): void {
-    const nextVal = !this.emailDailyReminder();
+  toggleEmailReminder(event?: Event): void {
+    const input = event?.target as HTMLInputElement | null;
+    const nextVal = input ? input.checked : !this.emailDailyReminder();
     this.emailDailyReminder.set(nextVal);
 
     this.http

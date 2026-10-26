@@ -1343,11 +1343,17 @@ export class AdminDashboardComponent implements OnInit {
   openCreateQuizModal(): void {
     this.selectedQuiz.set(null);
     this.showQuizModal.set(true);
+    if (this.lessons().length === 0) {
+      this.loadLessons();
+    }
   }
 
   openEditQuizModal(quiz: AdminQuiz): void {
     this.selectedQuiz.set(quiz);
     this.showQuizModal.set(true);
+    if (this.lessons().length === 0) {
+      this.loadLessons();
+    }
   }
 
   onSaveQuiz(event: { id?: string; dto: CreateQuizDto | UpdateQuizDto }): void {

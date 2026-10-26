@@ -127,18 +127,58 @@ interface FormQuestion {
 
               <!-- Associated Lesson (Optional) -->
               <div class="space-y-1.5">
-                <label class="block text-xs font-semibold text-slate-300">
-                  Leçon associée (optionnel)
-                </label>
+                <div class="flex items-center justify-between">
+                  <label class="block text-xs font-semibold text-slate-300">
+                    Leçon associée (optionnel)
+                  </label>
+                  <button
+                    type="button"
+                    (click)="showAllLessons.set(!showAllLessons())"
+                    class="text-[11px] text-purple-400 hover:text-purple-300 underline font-medium transition-colors"
+                  >
+                    {{ showAllLessons() ? 'Filtrer par catégorie' : 'Afficher toutes les leçons (' + allLessons().length + ')' }}
+                  </button>
+                </div>
                 <select
-                  [(ngModel)]="lessonId"
+                  [ngModel]="lessonId"
+                  (ngModelChange)="onLessonChange($event)"
                   class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                 >
-                  <option [value]="''">Aucune leçon spécifique</option>
+                  <option [value]="''">
+                    {{ filteredLessons().length > 0 ? 'Aucune leçon spécifique (Quiz de catégorie général)' : 'Quiz sans leçon rattachée' }}
+                  </option>
                   @for (lesson of filteredLessons(); track lesson.id) {
-                    <option [value]="lesson.id">{{ lesson.title }}</option>
+                    <option [value]="lesson.id">
+                      {{ (showAllLessons() || !categoryId) ? '[' + (lesson.categoryName || lesson.category?.name || getCategoryName(lesson.categoryId)) + '] ' : '' }}{{ lesson.title }} ({{ lesson.difficulty }})
+                    </option>
                   }
                 </select>
+
+                @if (isLoadingLessons()) {
+                  <p class="text-[11px] text-purple-400 animate-pulse flex items-center gap-1">
+                    Chargement des leçons disponibles...
+                  </p>
+                } @else if (filteredLessons().length === 0 && !showAllLessons()) {
+                  <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 space-y-1">
+                    <p class="font-medium">
+                      ⚠️ Aucune leçon enregistrée dans la catégorie "{{ getCategoryName() }}".
+                    </p>
+                    <p class="text-slate-400 text-[11px]">
+                      Vous pouvez créer un quiz général pour cette catégorie, ou
+                      <button
+                        type="button"
+                        (click)="showAllLessons.set(true)"
+                        class="text-purple-300 hover:text-white underline font-semibold ml-0.5"
+                      >
+                        afficher les {{ allLessons().length }} leçons d'autres catégories
+                      </button>.
+                    </p>
+                  </div>
+                } @else if (filteredLessons().length > 0) {
+                  <p class="text-[11px] text-slate-400">
+                    {{ filteredLessons().length }} leçon(s) disponible(s) {{ showAllLessons() ? 'au total' : 'dans cette catégorie' }}.
+                  </p>
+                }
               </div>
 
               <!-- Difficulty & Order -->
@@ -619,16 +659,40 @@ export class QuizFormModalComponent implements OnInit {
     ],
   };
 
+  readonly allLessons = signal<AdminLesson[]>([]);
+  readonly isLoadingLessons = signal<boolean>(false);
+  readonly showAllLessons = signal<boolean>(false);
+
   isEditMode(): boolean {
     return !!this.quiz();
   }
 
+  getCategoryName(catId?: string): string {
+    const id = catId || this.categoryId;
+    const cat = this.categories().find((c) => c.id === id);
+    return cat ? cat.name : 'Catégorie';
+  }
+
   filteredLessons(): AdminLesson[] {
-    if (!this.categoryId) return this.lessons();
-    return this.lessons().filter((l) => l.categoryId === this.categoryId);
+    const list = this.allLessons().length > 0 ? this.allLessons() : this.lessons();
+    if (this.showAllLessons()) {
+      return list;
+    }
+    if (!this.categoryId) {
+      return list;
+    }
+    return list.filter(
+      (l) => l.categoryId === this.categoryId || l.category?.id === this.categoryId
+    );
   }
 
   ngOnInit(): void {
+    // Initialize allLessons from input if available
+    if (this.lessons().length > 0) {
+      this.allLessons.set(this.lessons());
+    }
+    this.loadAllLessons();
+
     const q = this.quiz();
     if (q) {
       this.title = q.title || '';
@@ -649,6 +713,19 @@ export class QuizFormModalComponent implements OnInit {
     }
   }
 
+  loadAllLessons(): void {
+    this.isLoadingLessons.set(true);
+    this.adminService.getLessons().subscribe({
+      next: (data) => {
+        this.allLessons.set(data);
+        this.isLoadingLessons.set(false);
+      },
+      error: () => {
+        this.isLoadingLessons.set(false);
+      },
+    });
+  }
+
   loadQuizQuestions(quizId: string): void {
     this.isLoadingQuestions = true;
     this.adminService.getQuiz(quizId).subscribe({
@@ -663,11 +740,26 @@ export class QuizFormModalComponent implements OnInit {
     });
   }
 
+  onLessonChange(newLessonId: string): void {
+    this.lessonId = newLessonId;
+    if (newLessonId) {
+      const list = this.allLessons().length > 0 ? this.allLessons() : this.lessons();
+      const selected = list.find((l) => l.id === newLessonId);
+      const catId = selected?.categoryId || selected?.category?.id;
+      if (catId && catId !== this.categoryId) {
+        this.categoryId = catId;
+      }
+    }
+  }
+
   onCategoryChange(): void {
-    // If selected lesson is not in the new category, reset lessonId
-    const currentLesson = this.lessons().find((l) => l.id === this.lessonId);
-    if (currentLesson && currentLesson.categoryId !== this.categoryId) {
-      this.lessonId = '';
+    if (!this.showAllLessons()) {
+      const list = this.allLessons().length > 0 ? this.allLessons() : this.lessons();
+      const currentLesson = list.find((l) => l.id === this.lessonId);
+      const catId = currentLesson?.categoryId || currentLesson?.category?.id;
+      if (currentLesson && catId !== this.categoryId) {
+        this.lessonId = '';
+      }
     }
   }
 

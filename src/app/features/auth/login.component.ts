@@ -165,6 +165,13 @@ export class LoginComponent implements OnInit {
         params['error_description'] ||
           'La connexion via le fournisseur d’identité a échoué. Veuillez vérifier la configuration OAuth.'
       );
+      return;
+    }
+
+    // Si déjà connecté, rediriger automatiquement
+    if (this.authService.isAuthenticated()) {
+      const returnUrl = params['returnUrl'] || '/catalog';
+      this.router.navigateByUrl(returnUrl);
     }
   }
 

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/auth/auth.service';
@@ -142,7 +142,7 @@ import { LucideCode2, LucideSparkles, LucideArrowRight, LucideAlertCircle } from
     </div>
   `,
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit {
   readonly authService = inject(AuthService);
   readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -153,6 +153,13 @@ export class RegisterComponent {
   readonly password = signal<string>('');
   readonly isLoading = signal<boolean>(false);
   readonly errorMessage = signal<string | null>(null);
+
+  ngOnInit(): void {
+    if (this.authService.isAuthenticated()) {
+      const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/catalog';
+      this.router.navigateByUrl(returnUrl);
+    }
+  }
 
   onSubmit(): void {
     if (!this.email() || !this.password()) return;

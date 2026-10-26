@@ -58,6 +58,7 @@ function handle401Error(
       }),
       catchError((err) => {
         isRefreshing = false;
+        refreshTokenSubject.next(''); // Débloquer les requêtes en attente
         authService.clearSession();
         return throwError(() => err);
       })
@@ -67,15 +68,18 @@ function handle401Error(
     return refreshTokenSubject.pipe(
       filter((token) => token !== null),
       take(1),
-      switchMap((token) =>
-        next(
+      switchMap((token) => {
+        if (!token) {
+          return throwError(() => new Error('Session expirée'));
+        }
+        return next(
           req.clone({
             setHeaders: {
               Authorization: `Bearer ${token}`,
             },
           })
-        )
-      )
+        );
+      })
     );
   }
 }

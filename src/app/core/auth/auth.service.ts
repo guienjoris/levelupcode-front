@@ -25,7 +25,7 @@ export class AuthService {
 
   // Signals réactifs pour l'état d'authentification initialisés directement depuis le localStorage
   readonly currentUser = signal<UserProfile | null>(this.getCachedUser());
-  readonly isAuthenticated = computed(() => !!this.currentUser());
+  readonly isAuthenticated = computed(() => !!this.currentUser() || !!this.getAccessToken());
   readonly isAdmin = computed(() => this.currentUser()?.role === 'ADMIN');
   readonly isSupporter = computed(() => !!this.currentUser()?.isSupporter);
   readonly isInitialized = signal<boolean>(false);
@@ -37,7 +37,35 @@ export class AuthService {
   private getCachedUser(): UserProfile | null {
     try {
       const raw = localStorage.getItem(this.USER_KEY);
-      return raw ? JSON.parse(raw) : null;
+      if (raw) {
+        return JSON.parse(raw);
+      }
+    } catch {
+      // ignore
+    }
+
+    // Fallback: extraire les données utilisateur de base directement depuis le JWT accessToken
+    const token = this.getAccessToken();
+    if (token) {
+      return this.parseUserFromToken(token);
+    }
+    return null;
+  }
+
+  private parseUserFromToken(token: string): UserProfile | null {
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      const payload = JSON.parse(
+        atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'))
+      );
+      if (!payload.sub || !payload.email) return null;
+      return {
+        id: payload.sub,
+        email: payload.email,
+        role: payload.role || 'USER',
+        name: payload.name || payload.email.split('@')[0],
+      };
     } catch {
       return null;
     }
@@ -54,11 +82,13 @@ export class AuthService {
 
   private initSession(): void {
     const token = this.getAccessToken();
-    if (token) {
+    const refreshToken = this.getRefreshToken();
+
+    if (token || refreshToken) {
       this.loadCurrentUser().subscribe({
         next: () => this.isInitialized.set(true),
         error: () => {
-          this.clearSession();
+          // On ne supprime pas la session sur une simple erreur réseau / transient
           this.isInitialized.set(true);
         },
       });
@@ -112,7 +142,10 @@ export class AuthService {
     return this.http.get<UserProfile>(`${this.apiUrl}/auth/me`).pipe(
       tap((user) => this.setCurrentUser(user)),
       catchError((err) => {
-        this.clearSession();
+        // Déconnecter UNIQUEMENT en cas de 401 avéré sans moyen de refresh
+        if (err.status === 401 && !this.getRefreshToken()) {
+          this.clearSession();
+        }
         return throwError(() => err);
       })
     );

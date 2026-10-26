@@ -100,16 +100,17 @@ import { LucideCode2, LucideSparkles, LucideArrowRight, LucideAlertCircle } from
 
         <!-- OAuth Social Buttons -->
         <div class="space-y-4 pt-2">
-          <div class="relative flex items-center justify-center">
-            <div class="border-t border-slate-700 w-full"></div>
+          <div class="flex items-center justify-center flex-row gap-2">
+            <div class="border-t border-slate-700 flex-1"></div>
             <span class="bg-slate-800 px-3 text-xs text-slate-500 uppercase tracking-wider">ou s'inscrire avec</span>
+            <div class="border-t border-slate-700 flex-1"></div>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <button
               type="button"
               (click)="authService.loginWithGoogle()"
-              class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition-all"
+              class="hover:cursor-pointer flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-red-900 hover:bg-red-700 border border-red-700 text-xs font-medium text-white transition-all"
             >
               <span>Google</span>
             </button>
@@ -117,7 +118,7 @@ import { LucideCode2, LucideSparkles, LucideArrowRight, LucideAlertCircle } from
             <button
               type="button"
               (click)="authService.loginWithGithub()"
-              class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition-all"
+              class="hover:cursor-pointer flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gray-800 hover:bg-gray-600 border border-gray-600 text-xs font-medium text-white transition-all"
             >
               <span>GitHub</span>
             </button>

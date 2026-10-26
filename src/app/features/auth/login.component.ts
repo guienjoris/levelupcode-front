@@ -71,7 +71,7 @@ import { LucideCode2, LucideArrowRight, LucideAlertCircle } from '@lucide/angula
           <button
             type="submit"
             [disabled]="isLoading() || !email() || !password()"
-            class="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-600/25 transition-all flex items-center justify-center gap-2 group mt-2"
+            class="hover:cursor-pointer w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-600/25 transition-all flex items-center justify-center gap-2 group mt-2"
           >
             @if (isLoading()) {
               <span>Connexion en cours...</span>
@@ -84,16 +84,17 @@ import { LucideCode2, LucideArrowRight, LucideAlertCircle } from '@lucide/angula
 
         <!-- OAuth Social Buttons -->
         <div class="space-y-4 pt-2">
-          <div class="relative flex items-center justify-center">
-            <div class="border-t border-slate-700 w-full"></div>
+          <div class="flex items-center justify-center flex-row gap-2">
+            <div class="border-t border-slate-700 flex-1"></div>
             <span class="bg-slate-800 px-3 text-xs text-slate-500 uppercase tracking-wider">ou continuer avec</span>
+            <div class="border-t border-slate-700 flex-1"></div>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <button
               type="button"
               (click)="authService.loginWithGoogle()"
-              class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition-all"
+              class="hover:cursor-pointer flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-red-900 hover:bg-red-700 border border-red-700 text-xs font-medium text-white transition-all"
             >
               <span>Google</span>
             </button>
@@ -101,7 +102,7 @@ import { LucideCode2, LucideArrowRight, LucideAlertCircle } from '@lucide/angula
             <button
               type="button"
               (click)="authService.loginWithGithub()"
-              class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition-all"
+              class="hover:cursor-pointer flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gray-800 hover:bg-gray-600 border border-gray-600 text-xs font-medium text-white transition-all"
             >
               <span>GitHub</span>
             </button>
@@ -163,7 +164,7 @@ export class LoginComponent implements OnInit {
     if (params['error']) {
       this.errorMessage.set(
         params['error_description'] ||
-          'La connexion via le fournisseur d’identité a échoué. Veuillez vérifier la configuration OAuth.'
+        'La connexion via le fournisseur d’identité a échoué. Veuillez vérifier la configuration OAuth.'
       );
       return;
     }

@@ -23,25 +23,42 @@ export interface QuizDetail {
 
 export interface QuizSubmissionAnswer {
   questionId: string;
-  answerId: string;
+  selectedAnswerId: string;
 }
 
 export interface QuizSubmissionPayload {
   answers: QuizSubmissionAnswer[];
 }
 
-export interface QuizQuestionResult {
+export interface QuestionCorrection {
   questionId: string;
-  userAnswerId: string;
+  selectedAnswerId: string;
   correctAnswerId: string;
   isCorrect: boolean;
-  explanation: string;
+  explanation?: string;
+  userAnswerId?: string; // alias
+}
+
+export type QuizQuestionResult = QuestionCorrection;
+
+export interface QuizReward {
+  isNewCompletion?: boolean;
+  xpEarned: number;
+  currentStreak?: number;
+  longestStreak?: number;
+  newStreak?: number;
 }
 
 export interface QuizSubmissionResult {
+  quizId?: string;
   score: number;
   passed: boolean;
-  xpEarned: number;
-  currentStreak: number;
-  results: QuizQuestionResult[];
+  totalQuestions?: number;
+  correctCount?: number;
+  corrections: QuestionCorrection[];
+  reward?: QuizReward;
+  // Aliases for retro-compatibility
+  xpEarned?: number;
+  currentStreak?: number;
+  results?: QuestionCorrection[];
 }

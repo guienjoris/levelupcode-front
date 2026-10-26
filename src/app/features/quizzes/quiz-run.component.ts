@@ -146,7 +146,7 @@ import {
                     @let isSelected = selectedAnswers()[question.id] === answer.id;
                     @let qResult = getQuestionResult(question.id);
                     @let isCorrect = qResult?.correctAnswerId === answer.id;
-                    @let isUserWrong = qResult && qResult.userAnswerId === answer.id && !qResult.isCorrect;
+                    @let isUserWrong = qResult && (qResult.selectedAnswerId === answer.id || qResult.userAnswerId === answer.id) && !qResult.isCorrect;
 
                     <label
                       class="flex items-center justify-between p-3.5 rounded-xl border transition-all"
@@ -299,7 +299,9 @@ export class QuizRunComponent implements OnInit {
   }
 
   getQuestionResult(questionId: string): QuizQuestionResult | undefined {
-    return this.submissionResult()?.results.find((r) => r.questionId === questionId);
+    const res = this.submissionResult();
+    const list = res?.corrections || res?.results || [];
+    return list.find((r) => r.questionId === questionId);
   }
 
   submitQuiz(): void {
@@ -309,9 +311,9 @@ export class QuizRunComponent implements OnInit {
     this.isSubmitting.set(true);
 
     const payload = {
-      answers: Object.entries(this.selectedAnswers()).map(([questionId, answerId]) => ({
+      answers: Object.entries(this.selectedAnswers()).map(([questionId, selectedAnswerId]) => ({
         questionId,
-        answerId,
+        selectedAnswerId,
       })),
     };
 
@@ -320,20 +322,26 @@ export class QuizRunComponent implements OnInit {
         this.isSubmitting.set(false);
         this.submissionResult.set(result);
 
+        const xpEarned = result.reward?.xpEarned ?? result.xpEarned ?? 0;
+        const currentStreak = result.reward?.currentStreak ?? result.currentStreak ?? 0;
+
         if (result.passed) {
           confetti({
             particleCount: 100,
             spread: 70,
             origin: { y: 0.6 },
           });
-          this.toast.streak(result.currentStreak, result.xpEarned);
+          this.toast.streak(currentStreak, xpEarned);
         } else {
           this.toast.info(`Quiz terminé. Score : ${result.score}%. Retentez pour valider !`);
         }
       },
       error: (err) => {
         this.isSubmitting.set(false);
-        this.toast.error(err.error?.message || 'Erreur lors de la soumission du quiz.');
+        const errMsg = Array.isArray(err.error?.message)
+          ? err.error.message.join(', ')
+          : err.error?.message || 'Erreur lors de la soumission du quiz.';
+        this.toast.error(errMsg);
       },
     });
   }

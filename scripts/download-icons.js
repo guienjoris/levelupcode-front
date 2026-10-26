@@ -30,8 +30,13 @@ function fetchJson(url) {
 
 function downloadSvg(iconName, slug) {
   return new Promise((resolve) => {
-    const url = `https://api.iconify.design/${iconName}.svg`;
+    const pathPart = iconName.includes(':') ? iconName.replace(':', '/') : iconName;
+    const url = `https://api.iconify.design/${pathPart}.svg`;
     https.get(url, (res) => {
+      if (res.statusCode !== 200) {
+        console.error(`✗ Erreur HTTP ${res.statusCode} pour ${slug} (${url})`);
+        return resolve();
+      }
       let data = '';
       res.on('data', (chunk) => (data += chunk));
       res.on('end', () => {

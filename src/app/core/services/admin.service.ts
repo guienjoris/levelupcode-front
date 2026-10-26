@@ -29,24 +29,93 @@ export class AdminService {
   private readonly apiUrl = environment.apiUrl;
 
   // ==========================================
+  // NORMALIZATION HELPERS
+  // ==========================================
+  private normalizeCategory(cat: any): AdminCategory {
+    if (!cat) return cat;
+    const tags = Array.isArray(cat.tags)
+      ? cat.tags
+          .map((t: any) => {
+            if (t?.tag && typeof t.tag === 'object') {
+              return {
+                id: t.tag.id || t.tagId,
+                name: t.tag.name || '',
+                slug: t.tag.slug || '',
+              };
+            }
+            return {
+              id: t.id || t.tagId || '',
+              name: t.name || '',
+              slug: t.slug || '',
+            };
+          })
+          .filter((t: any) => typeof t.id === 'string' && t.id.length > 0)
+      : [];
+
+    return {
+      ...cat,
+      tags,
+      lessonsCount: cat._count?.lessons ?? cat.lessonsCount ?? 0,
+      quizzesCount: cat._count?.quizzes ?? cat.quizzesCount ?? 0,
+    };
+  }
+
+  private normalizeTag(tag: any): AdminTag {
+    if (!tag) return tag;
+    const categories = Array.isArray(tag.categories)
+      ? tag.categories
+          .map((c: any) => {
+            if (c?.category && typeof c.category === 'object') {
+              return {
+                id: c.category.id || c.categoryId,
+                name: c.category.name || '',
+                slug: c.category.slug || '',
+              };
+            }
+            return {
+              id: c.id || c.categoryId || '',
+              name: c.name || '',
+              slug: c.slug || '',
+            };
+          })
+          .filter((c: any) => typeof c.id === 'string' && c.id.length > 0)
+      : [];
+
+    return {
+      ...tag,
+      categories,
+    };
+  }
+
+  // ==========================================
   // CATEGORIES
   // ==========================================
   getCategories(): Observable<AdminCategory[]> {
     return this.http
       .get<any>(`${this.apiUrl}/admin/categories`)
-      .pipe(map((res) => (Array.isArray(res) ? res : res?.data || [])));
+      .pipe(
+        map((res) =>
+          (Array.isArray(res) ? res : res?.data || []).map((c: any) => this.normalizeCategory(c))
+        )
+      );
   }
 
   getCategory(id: string): Observable<AdminCategory> {
-    return this.http.get<AdminCategory>(`${this.apiUrl}/admin/categories/${id}`);
+    return this.http
+      .get<any>(`${this.apiUrl}/admin/categories/${id}`)
+      .pipe(map((res) => this.normalizeCategory(res)));
   }
 
   createCategory(dto: CreateCategoryDto): Observable<AdminCategory> {
-    return this.http.post<AdminCategory>(`${this.apiUrl}/admin/categories`, dto);
+    return this.http
+      .post<any>(`${this.apiUrl}/admin/categories`, dto)
+      .pipe(map((res) => this.normalizeCategory(res)));
   }
 
   updateCategory(id: string, dto: UpdateCategoryDto): Observable<AdminCategory> {
-    return this.http.patch<AdminCategory>(`${this.apiUrl}/admin/categories/${id}`, dto);
+    return this.http
+      .patch<any>(`${this.apiUrl}/admin/categories/${id}`, dto)
+      .pipe(map((res) => this.normalizeCategory(res)));
   }
 
   deleteCategory(id: string): Observable<void> {
@@ -154,19 +223,29 @@ export class AdminService {
 
     return this.http
       .get<any>(`${this.apiUrl}/admin/tags`, { params })
-      .pipe(map((res) => (Array.isArray(res) ? res : res?.data || [])));
+      .pipe(
+        map((res) =>
+          (Array.isArray(res) ? res : res?.data || []).map((t: any) => this.normalizeTag(t))
+        )
+      );
   }
 
   getTag(id: string): Observable<AdminTag> {
-    return this.http.get<AdminTag>(`${this.apiUrl}/admin/tags/${id}`);
+    return this.http
+      .get<any>(`${this.apiUrl}/admin/tags/${id}`)
+      .pipe(map((res) => this.normalizeTag(res)));
   }
 
   createTag(dto: CreateTagDto): Observable<AdminTag> {
-    return this.http.post<AdminTag>(`${this.apiUrl}/admin/tags`, dto);
+    return this.http
+      .post<any>(`${this.apiUrl}/admin/tags`, dto)
+      .pipe(map((res) => this.normalizeTag(res)));
   }
 
   updateTag(id: string, dto: UpdateTagDto): Observable<AdminTag> {
-    return this.http.patch<AdminTag>(`${this.apiUrl}/admin/tags/${id}`, dto);
+    return this.http
+      .patch<any>(`${this.apiUrl}/admin/tags/${id}`, dto)
+      .pipe(map((res) => this.normalizeTag(res)));
   }
 
   deleteTag(id: string): Observable<void> {

@@ -287,12 +287,16 @@ type AdminTab = 'categories' | 'lessons' | 'quizzes' | 'tags' | 'reports' | 'don
                     <div class="flex items-start justify-between gap-3">
                       <div class="flex items-center gap-3">
                         <div class="w-11 h-11 rounded-xl bg-slate-900 border border-slate-700 p-2 flex items-center justify-center shrink-0">
-                          <img
-                            [src]="'/icons/' + cat.slug + '.svg'"
-                            [alt]="cat.name"
-                            (error)="onIconError($event)"
-                            class="w-full h-full object-contain"
-                          />
+                          @if (!failedCategoryIcons().has(cat.id)) {
+                            <img
+                              [src]="'/icons/' + cat.slug + '.svg'"
+                              [alt]="cat.name"
+                              (error)="onCategoryIconError(cat.id)"
+                              class="w-full h-full object-contain"
+                            />
+                          } @else {
+                            <svg lucideLayers class="w-6 h-6 text-indigo-400"></svg>
+                          }
                         </div>
                         <div>
                           <h4 class="font-bold text-white text-base group-hover:text-indigo-400 transition-colors">
@@ -314,7 +318,7 @@ type AdminTab = 'categories' | 'lessons' | 'quizzes' | 'tags' | 'reports' | 'don
 
                     <!-- Tags list -->
                     <div class="flex flex-wrap gap-1.5 pt-1">
-                      @for (tag of cat.tags || []; track tag.id) {
+                      @for (tag of cat.tags || []; track (tag.id || tag.slug)) {
                         <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
                           {{ tag.name }}
                         </span>
@@ -1118,9 +1122,14 @@ export class AdminDashboardComponent implements OnInit {
     this.activeTab.set(tab);
   }
 
-  onIconError(event: Event): void {
-    const img = event.target as HTMLImageElement;
-    img.src = '/icons/architecture.svg';
+  readonly failedCategoryIcons = signal<Set<string>>(new Set());
+
+  onCategoryIconError(categoryId: string): void {
+    this.failedCategoryIcons.update((set) => {
+      const next = new Set(set);
+      next.add(categoryId);
+      return next;
+    });
   }
 
   // ==========================================
@@ -1163,7 +1172,10 @@ export class AdminDashboardComponent implements OnInit {
         },
         error: (err) => {
           this.isSavingCategory.set(false);
-          this.toast.error(err.error?.message || 'Erreur lors de la mise à jour de la catégorie.');
+          const errMsg = Array.isArray(err.error?.message)
+            ? err.error.message.join(', ')
+            : err.error?.message || 'Erreur lors de la mise à jour de la catégorie.';
+          this.toast.error(errMsg);
         },
       });
     } else {
@@ -1177,7 +1189,10 @@ export class AdminDashboardComponent implements OnInit {
         },
         error: (err) => {
           this.isSavingCategory.set(false);
-          this.toast.error(err.error?.message || 'Erreur lors de la création de la catégorie.');
+          const errMsg = Array.isArray(err.error?.message)
+            ? err.error.message.join(', ')
+            : err.error?.message || 'Erreur lors de la création de la catégorie.';
+          this.toast.error(errMsg);
         },
       });
     }
@@ -1451,7 +1466,10 @@ export class AdminDashboardComponent implements OnInit {
         },
         error: (err) => {
           this.isSavingTag.set(false);
-          this.toast.error(err.error?.message || 'Erreur lors de la mise à jour du tag.');
+          const errMsg = Array.isArray(err.error?.message)
+            ? err.error.message.join(', ')
+            : err.error?.message || 'Erreur lors de la mise à jour du tag.';
+          this.toast.error(errMsg);
         },
       });
     } else {
@@ -1465,7 +1483,10 @@ export class AdminDashboardComponent implements OnInit {
         },
         error: (err) => {
           this.isSavingTag.set(false);
-          this.toast.error(err.error?.message || 'Erreur lors de la création du tag.');
+          const errMsg = Array.isArray(err.error?.message)
+            ? err.error.message.join(', ')
+            : err.error?.message || 'Erreur lors de la création du tag.';
+          this.toast.error(errMsg);
         },
       });
     }

@@ -162,7 +162,10 @@ export class TagFormModalComponent implements OnInit {
       this.name = t.name || '';
       this.slug = t.slug || '';
       if (t.categories && Array.isArray(t.categories)) {
-        this.selectedCategoryIds = new Set(t.categories.map((c) => c.id));
+        const ids = t.categories
+          .map((c: any) => (c?.category?.id ? c.category.id : c?.id || c?.categoryId))
+          .filter((id): id is string => typeof id === 'string' && id.trim().length > 0);
+        this.selectedCategoryIds = new Set(ids);
       }
     }
   }
@@ -194,10 +197,14 @@ export class TagFormModalComponent implements OnInit {
   onSubmit(): void {
     if (!this.isValid()) return;
 
+    const cleanCategoryIds = Array.from(this.selectedCategoryIds).filter(
+      (id): id is string => typeof id === 'string' && id.trim().length > 0
+    );
+
     const dto: CreateTagDto = {
       name: this.name.trim(),
       slug: this.slug.trim().toLowerCase(),
-      categoryIds: Array.from(this.selectedCategoryIds),
+      categoryIds: cleanCategoryIds,
     };
 
     this.save.emit({

@@ -237,7 +237,10 @@ export class CategoryFormModalComponent implements OnInit {
       this.icon = cat.icon || '';
       this.orderIndex = cat.orderIndex ?? 0;
       if (cat.tags && Array.isArray(cat.tags)) {
-        this.selectedTagIds = new Set(cat.tags.map((t) => t.id));
+        const ids = cat.tags
+          .map((t: any) => (t?.tag?.id ? t.tag.id : t?.id || t?.tagId))
+          .filter((id): id is string => typeof id === 'string' && id.trim().length > 0);
+        this.selectedTagIds = new Set(ids);
       }
     }
   }
@@ -269,13 +272,17 @@ export class CategoryFormModalComponent implements OnInit {
   onSubmit(): void {
     if (!this.isValid()) return;
 
+    const cleanTagIds = Array.from(this.selectedTagIds).filter(
+      (id): id is string => typeof id === 'string' && id.trim().length > 0
+    );
+
     const dto: CreateCategoryDto = {
       name: this.name.trim(),
       slug: this.slug.trim().toLowerCase(),
-      description: this.description.trim(),
+      description: this.description.trim() || undefined,
       icon: this.icon.trim() || undefined,
-      orderIndex: Number(this.orderIndex) || 0,
-      tagIds: Array.from(this.selectedTagIds),
+      orderIndex: Math.max(0, Math.floor(Number(this.orderIndex) || 0)),
+      tagIds: cleanTagIds,
     };
 
     this.save.emit({

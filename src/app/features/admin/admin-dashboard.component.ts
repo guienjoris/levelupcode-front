@@ -645,7 +645,7 @@ type AdminTab = 'categories' | 'lessons' | 'quizzes' | 'tags' | 'reports' | 'don
 
                       <!-- Questions count -->
                       <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-500/10 text-purple-300 border border-purple-500/20">
-                        {{ quiz.questionsCount || quiz.questions?.length || 0 }} questions
+                        {{ quiz._count?.questions ?? 0 }} questions
                       </span>
 
                       <!-- Status -->

@@ -173,8 +173,7 @@ export interface AdminQuiz {
   lesson?: { id: string; title: string; slug?: string };
   orderIndex: number;
   isPublished?: boolean;
-  questionsCount?: number;
-  questions?: AdminQuizQuestion[];
+  _count?: { questions: number, progress: number };
   createdAt?: string;
   updatedAt?: string;
 }

@@ -6,6 +6,8 @@ export interface User {
   isSupporter?: boolean;
   avatarUrl?: string;
   emailDailyReminder?: boolean;
+  currentStreak?: number;
+  longestStreak?: number;
 }
 
 export interface UserProfile extends User {

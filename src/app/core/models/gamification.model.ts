@@ -13,14 +13,19 @@ export interface TagXpScore {
 }
 
 export interface UserStats {
+  userId?: string;
   currentStreak: number;
   longestStreak: number;
+  lastActiveDate?: string | null;
   totalXp: number;
   isSupporter: boolean;
   supporterSince?: string;
+  daysSinceRegistration: number;
   registrationDays: number;
   completedLessonsCount: number;
   completedQuizzesCount: number;
+  xpByCategory: CategoryXpScore[];
+  xpByTag: TagXpScore[];
   scoresByCategory: CategoryXpScore[];
   scoresByTag: TagXpScore[];
 }

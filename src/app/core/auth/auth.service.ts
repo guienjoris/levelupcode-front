@@ -21,9 +21,10 @@ export class AuthService {
 
   private readonly ACCESS_TOKEN_KEY = 'accessToken';
   private readonly REFRESH_TOKEN_KEY = 'refreshToken';
+  private readonly USER_KEY = 'currentUser';
 
-  // Signals réactifs pour l'état d'authentification
-  readonly currentUser = signal<UserProfile | null>(null);
+  // Signals réactifs pour l'état d'authentification initialisés directement depuis le localStorage
+  readonly currentUser = signal<UserProfile | null>(this.getCachedUser());
   readonly isAuthenticated = computed(() => !!this.currentUser());
   readonly isAdmin = computed(() => this.currentUser()?.role === 'ADMIN');
   readonly isSupporter = computed(() => !!this.currentUser()?.isSupporter);
@@ -31,6 +32,24 @@ export class AuthService {
 
   constructor() {
     this.initSession();
+  }
+
+  private getCachedUser(): UserProfile | null {
+    try {
+      const raw = localStorage.getItem(this.USER_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  setCurrentUser(user: UserProfile | null): void {
+    if (user) {
+      localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    } else {
+      localStorage.removeItem(this.USER_KEY);
+    }
+    this.currentUser.set(user);
   }
 
   private initSession(): void {
@@ -44,6 +63,7 @@ export class AuthService {
         },
       });
     } else {
+      this.clearSession();
       this.isInitialized.set(true);
     }
   }
@@ -66,6 +86,7 @@ export class AuthService {
   clearSession(): void {
     localStorage.removeItem(this.ACCESS_TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
+    localStorage.removeItem(this.USER_KEY);
     this.currentUser.set(null);
   }
 
@@ -73,7 +94,7 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, dto).pipe(
       tap((res) => {
         this.setTokens(res.accessToken, res.refreshToken);
-        this.currentUser.set(res.user);
+        this.setCurrentUser(res.user);
       })
     );
   }
@@ -82,14 +103,14 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, dto).pipe(
       tap((res) => {
         this.setTokens(res.accessToken, res.refreshToken);
-        this.currentUser.set(res.user);
+        this.setCurrentUser(res.user);
       })
     );
   }
 
   loadCurrentUser(): Observable<UserProfile> {
     return this.http.get<UserProfile>(`${this.apiUrl}/auth/me`).pipe(
-      tap((user) => this.currentUser.set(user)),
+      tap((user) => this.setCurrentUser(user)),
       catchError((err) => {
         this.clearSession();
         return throwError(() => err);

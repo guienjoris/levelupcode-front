@@ -79,13 +79,23 @@ import { LucideCode2, LucideArrowRight, LucideBookOpen, LucideHelpCircle } from 
 export class CategoryCardComponent {
   readonly category = input.required<Category>();
   readonly imageFailed = signal<boolean>(false);
-
+  readonly useCdnFallback = signal<boolean>(false);
   iconUrl(): string {
-    const slug = this.category().slug;
-    return `/icons/${slug}.svg`;
+    const cat = this.category();
+    if (this.useCdnFallback() && cat.icon) {
+      const pathPart = cat.icon.includes(':') ? cat.icon.replace(':', '/') : cat.icon;
+      return `https://api.iconify.design/${pathPart}.svg`;
+    }
+    return `/icons/${cat.slug}.svg`;
   }
-
   onImageError(): void {
-    this.imageFailed.set(true);
+    const cat = this.category();
+    if (!this.useCdnFallback() && cat.icon) {
+      // 1er échec : on tente le CDN officiel Iconify
+      this.useCdnFallback.set(true);
+    } else {
+      // 2e échec : fallback sur l'icône SVG lucideCode2
+      this.imageFailed.set(true);
+    }
   }
 }

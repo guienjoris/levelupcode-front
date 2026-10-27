@@ -391,7 +391,7 @@ interface FormQuestion {
                 <div>
                   <h4 class="text-sm font-bold text-white flex items-center gap-2">
                     <svg lucideHelpCircle class="w-4 h-4 text-purple-400"></svg>
-                    <span>Questions existantes ({{ existingQuestions.length }})</span>
+                    <span>Questions existantes ({{ existingQuestions().length }})</span>
                   </h4>
                   <p class="text-xs text-slate-400">
                     Ajoutez ou supprimez des questions individuellement
@@ -399,10 +399,10 @@ interface FormQuestion {
                 </div>
                 <button
                   type="button"
-                  (click)="showAddQuestionForm = !showAddQuestionForm"
+                  (click)="showAddQuestionForm.set(!showAddQuestionForm())"
                   class="px-3 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 text-xs font-semibold flex items-center gap-1.5 transition-colors"
                 >
-                  @if (!showAddQuestionForm) {
+                  @if (!showAddQuestionForm()) {
                     <svg lucidePlus class="w-3.5 h-3.5"></svg>
                     <span>Ajouter une question</span>
                   } @else {
@@ -413,7 +413,7 @@ interface FormQuestion {
               </div>
 
               <!-- Inline Add Question Form -->
-              @if (showAddQuestionForm) {
+              @if (showAddQuestionForm()) {
                 <div class="p-5 rounded-2xl bg-purple-950/20 border border-purple-500/30 space-y-4 animate-fade-in">
                   <h5 class="text-xs font-bold text-purple-300 uppercase tracking-wider">
                     Nouvelle Question pour ce Quiz
@@ -500,10 +500,10 @@ interface FormQuestion {
                     <button
                       type="button"
                       (click)="saveNewQuestionDirectly()"
-                      [disabled]="isSavingQuestion || !isNewQuestionValid()"
+                      [disabled]="isSavingQuestion() || !isNewQuestionValid()"
                       class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold shadow-md transition-all flex items-center gap-1.5 disabled:opacity-50"
                     >
-                      @if (isSavingQuestion) {
+                      @if (isSavingQuestion()) {
                         <div class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                         <span>Enregistrement...</span>
                       } @else {
@@ -516,17 +516,17 @@ interface FormQuestion {
               }
 
               <!-- List of existing questions -->
-              @if (isLoadingQuestions) {
+              @if (isLoadingQuestions()) {
                 <div class="py-6 text-center text-xs text-slate-400 animate-pulse">
                   Chargement des questions du quiz...
                 </div>
-              } @else if (existingQuestions.length === 0) {
+              } @else if (existingQuestions().length === 0) {
                 <div class="p-6 text-center rounded-xl bg-slate-800/20 border border-slate-800 text-slate-400 text-xs">
                   Aucune question enregistrée pour ce quiz.
                 </div>
               } @else {
                 <div class="space-y-3">
-                  @for (q of existingQuestions; track q.id; let qIdx = $index) {
+                  @for (q of existingQuestions(); track q.id; let qIdx = $index) {
                     <div class="p-4 rounded-xl bg-slate-800/40 border border-slate-700/60 space-y-2.5">
                       <div class="flex items-start justify-between gap-3">
                         <div class="space-y-1">
@@ -643,10 +643,10 @@ export class QuizFormModalComponent implements OnInit {
   ];
 
   // Edit Mode Questions state
-  existingQuestions: AdminQuizQuestion[] = [];
-  isLoadingQuestions = false;
-  showAddQuestionForm = false;
-  isSavingQuestion = false;
+  readonly existingQuestions = signal<AdminQuizQuestion[]>([]);
+  readonly isLoadingQuestions = signal<boolean>(false);
+  readonly showAddQuestionForm = signal<boolean>(false);
+  readonly isSavingQuestion = signal<boolean>(false);
 
   newQuestion: FormQuestion = {
     title: '',
@@ -727,15 +727,16 @@ export class QuizFormModalComponent implements OnInit {
   }
 
   loadQuizQuestions(quizId: string): void {
-    this.isLoadingQuestions = true;
+    this.isLoadingQuestions.set(true);
     this.adminService.getQuiz(quizId).subscribe({
-      next: (detail) => {
-        this.existingQuestions = detail.questions || [];
-        this.isLoadingQuestions = false;
+      next: (detail: any) => {
+        const questions = detail?.questions || detail?.data?.questions || [];
+        this.existingQuestions.set(questions);
+        this.isLoadingQuestions.set(false);
       },
       error: () => {
-        this.existingQuestions = [];
-        this.isLoadingQuestions = false;
+        this.existingQuestions.set([]);
+        this.isLoadingQuestions.set(false);
       },
     });
   }
@@ -815,12 +816,12 @@ export class QuizFormModalComponent implements OnInit {
     const qId = this.quiz()?.id;
     if (!qId || !this.isNewQuestionValid()) return;
 
-    this.isSavingQuestion = true;
+    this.isSavingQuestion.set(true);
     const dto: CreateAdminQuestionDto = {
       title: this.newQuestion.title.trim(),
       codeSnippet: this.newQuestion.codeSnippet.trim() || undefined,
       explanation: this.newQuestion.explanation.trim() || undefined,
-      orderIndex: this.existingQuestions.length,
+      orderIndex: this.existingQuestions().length,
       answers: this.newQuestion.answers.map((a, i) => ({
         text: a.text.trim(),
         isCorrect: a.isCorrect,
@@ -831,8 +832,8 @@ export class QuizFormModalComponent implements OnInit {
     this.adminService.addQuizQuestion(qId, dto).subscribe({
       next: (created) => {
         this.toast.success('Question ajoutée avec succès au quiz !');
-        this.isSavingQuestion = false;
-        this.showAddQuestionForm = false;
+        this.isSavingQuestion.set(false);
+        this.showAddQuestionForm.set(false);
         this.newQuestion = {
           title: '',
           codeSnippet: '',
@@ -846,7 +847,7 @@ export class QuizFormModalComponent implements OnInit {
         this.loadQuizQuestions(qId);
       },
       error: (err) => {
-        this.isSavingQuestion = false;
+        this.isSavingQuestion.set(false);
         this.toast.error(err.error?.message || "Erreur lors de l'ajout de la question.");
       },
     });

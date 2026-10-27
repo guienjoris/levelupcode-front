@@ -43,7 +43,7 @@ import {
 
         <div class="pt-2">
           <a
-            href="https://buymeacoffee.com"
+            href="https://buymeacoffee.com/guienjorisi"
             target="_blank"
             rel="noopener noreferrer"
             class="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 shadow-xl shadow-amber-500/25 transition-all hover:scale-105"

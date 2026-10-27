@@ -83,7 +83,7 @@ import {
         <!-- Buy Me a Coffee Supporter CTA or Badge -->
         @if (!authService.isSupporter()) {
           <a
-            href="https://buymeacoffee.com"
+            href="https://buymeacoffee.com/guienjorisi"
             target="_blank"
             rel="noopener noreferrer"
             class="px-4 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all flex items-center gap-2 hover:scale-105 shrink-0"

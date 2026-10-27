@@ -48,7 +48,7 @@ import { LucideCode2, LucideHeart, LucideCoffee } from '@lucide/angular';
               LevelUpCode est entièrement gratuit. Soutenez les coûts d'infrastructure et le contenu pédagogique :
             </p>
             <a
-              href="https://buymeacoffee.com"
+              href="https://buymeacoffee.com/guienjorisi"
               target="_blank"
               rel="noopener noreferrer"
               class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-semibold transition-all hover:scale-105"
@@ -68,4 +68,4 @@ import { LucideCode2, LucideHeart, LucideCoffee } from '@lucide/angular';
     </footer>
   `,
 })
-export class FooterComponent {}
+export class FooterComponent { }

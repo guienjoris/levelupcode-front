@@ -46,6 +46,10 @@ import { ToastService } from '../../../core/services/toast.service';
       color: #cbd5e1;
     }
 
+    :host ::ng-deep .markdown-content > :last-child {
+      margin-bottom: 0;
+    }
+
     :host ::ng-deep .markdown-content ul,
     :host ::ng-deep .markdown-content ol {
       margin-bottom: 1.25rem;

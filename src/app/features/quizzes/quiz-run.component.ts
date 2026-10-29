@@ -4,6 +4,7 @@ import { QuizService } from '../../core/services/quiz.service';
 import { ToastService } from '../../core/services/toast.service';
 import { QuizDetail, QuizSubmissionResult, QuizQuestionResult } from '../../core/models/quiz.model';
 import { ReportModalComponent } from '../../shared/components/report-modal/report-modal.component';
+import { MarkdownViewerComponent } from '../../shared/components/markdown-viewer/markdown-viewer.component';
 import confetti from 'canvas-confetti';
 import {
   LucideArrowLeft,
@@ -22,6 +23,7 @@ import {
   imports: [
     RouterLink,
     ReportModalComponent,
+    MarkdownViewerComponent,
     LucideArrowLeft,
     LucideCheckCircle2,
     LucideXCircle,
@@ -131,9 +133,9 @@ import {
                   <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">
                     Question {{ qIdx + 1 }} sur {{ quiz()!.questions.length }}
                   </span>
-                  <h3 class="text-lg font-bold text-white mt-1">
-                    {{ question.title }}
-                  </h3>
+                  <div class="mt-1">
+                    <app-markdown-viewer [content]="question.title"></app-markdown-viewer>
+                  </div>
 
                   @if (question.codeSnippet) {
                     <pre class="mt-3 p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-indigo-200 overflow-x-auto"><code>{{ question.codeSnippet }}</code></pre>
@@ -161,7 +163,7 @@ import {
                       [class.bg-rose-950\/40]="submissionResult() && isUserWrong"
                       [class.border-rose-500]="submissionResult() && isUserWrong"
                     >
-                      <div class="flex items-center gap-3">
+                      <div class="flex items-center gap-3 flex-1 min-w-0">
                         <input
                           type="radio"
                           [name]="'question_' + question.id"
@@ -169,19 +171,19 @@ import {
                           [disabled]="!!submissionResult()"
                           [checked]="isSelected"
                           (change)="selectAnswer(question.id, answer.id)"
-                          class="w-4 h-4 text-indigo-600 bg-slate-900 border-slate-700 focus:ring-indigo-500"
+                          class="w-4 h-4 text-indigo-600 bg-slate-900 border-slate-700 focus:ring-indigo-500 shrink-0"
                         />
-                        <span class="text-sm font-medium" [class.text-white]="isSelected || (submissionResult() && isCorrect)" [class.text-slate-300]="!isSelected">
-                          {{ answer.text }}
-                        </span>
+                        <div class="text-sm font-medium flex-1 min-w-0" [class.text-white]="isSelected || (submissionResult() && isCorrect)" [class.text-slate-300]="!isSelected">
+                          <app-markdown-viewer [content]="answer.text"></app-markdown-viewer>
+                        </div>
                       </div>
 
                       <!-- Validation icon -->
                       @if (submissionResult()) {
                         @if (isCorrect) {
-                          <svg lucideCheckCircle2 class="w-5 h-5 text-emerald-400"></svg>
+                          <svg lucideCheckCircle2 class="w-5 h-5 text-emerald-400 shrink-0 ml-2"></svg>
                         } @else if (isUserWrong) {
-                          <svg lucideXCircle class="w-5 h-5 text-rose-400"></svg>
+                          <svg lucideXCircle class="w-5 h-5 text-rose-400 shrink-0 ml-2"></svg>
                         }
                       }
                     </label>
@@ -190,10 +192,12 @@ import {
 
                 <!-- Pedagogical Explanation (post submission) -->
                 @if (getQuestionResult(question.id); as qResult) {
-                  <div class="mt-4 p-4 rounded-xl bg-slate-900/90 border border-slate-700/80 text-xs space-y-1">
-                    <span class="font-bold uppercase tracking-wider text-indigo-300">💡 Explication Pédagogique :</span>
-                    <p class="text-slate-300 leading-relaxed">{{ qResult.explanation }}</p>
-                  </div>
+                  @if (qResult.explanation) {
+                    <div class="mt-4 p-4 rounded-xl bg-slate-900/90 border border-slate-700/80 text-xs space-y-1.5">
+                      <span class="font-bold uppercase tracking-wider text-indigo-300 block">💡 Explication Pédagogique :</span>
+                      <app-markdown-viewer [content]="qResult.explanation"></app-markdown-viewer>
+                    </div>
+                  }
                 }
 
               </div>

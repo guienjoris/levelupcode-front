@@ -14,6 +14,7 @@ import {
 } from '../../../core/models/admin.model';
 import { AdminService } from '../../../core/services/admin.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { MarkdownViewerComponent } from '../../../shared/components/markdown-viewer/markdown-viewer.component';
 import {
   LucideHelpCircle,
   LucideX,
@@ -44,6 +45,7 @@ interface FormQuestion {
   standalone: true,
   imports: [
     FormsModule,
+    MarkdownViewerComponent,
     LucideHelpCircle,
     LucideX,
     LucideCheck,
@@ -529,11 +531,13 @@ interface FormQuestion {
                   @for (q of existingQuestions(); track q.id; let qIdx = $index) {
                     <div class="p-4 rounded-xl bg-slate-800/40 border border-slate-700/60 space-y-2.5">
                       <div class="flex items-start justify-between gap-3">
-                        <div class="space-y-1">
+                        <div class="space-y-1 flex-1 min-w-0">
                           <span class="text-[10px] font-bold uppercase tracking-wider text-purple-400">
                             Question {{ qIdx + 1 }}
                           </span>
-                          <p class="text-sm font-semibold text-white">{{ q.title }}</p>
+                          <div class="text-sm font-semibold text-white">
+                            <app-markdown-viewer [content]="q.title"></app-markdown-viewer>
+                          </div>
                         </div>
                         <button
                           type="button"
@@ -566,10 +570,19 @@ interface FormQuestion {
                             } @else {
                               <div class="w-2 h-2 rounded-full bg-slate-600 shrink-0"></div>
                             }
-                            <span class="truncate">{{ ans.text }}</span>
+                            <div class="flex-1 min-w-0">
+                              <app-markdown-viewer [content]="ans.text"></app-markdown-viewer>
+                            </div>
                           </div>
                         }
                       </div>
+
+                      @if (q.explanation) {
+                        <div class="pt-2 border-t border-slate-700/40 text-xs text-slate-400">
+                          <span class="font-semibold text-purple-300 block mb-0.5">Explication :</span>
+                          <app-markdown-viewer [content]="q.explanation"></app-markdown-viewer>
+                        </div>
+                      }
                     </div>
                   }
                 </div>

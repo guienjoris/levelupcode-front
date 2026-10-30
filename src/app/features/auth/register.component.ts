@@ -110,16 +110,18 @@ import { LucideCode2, LucideSparkles, LucideArrowRight, LucideAlertCircle } from
             <button
               type="button"
               (click)="authService.loginWithGoogle()"
-              class="hover:cursor-pointer flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-red-900 hover:bg-red-700 border border-red-700 text-xs font-medium text-white transition-all"
+              class="hover:cursor-pointer flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-800 shadow-sm transition-all"
             >
+              <img src="/icons/google-icon.svg" alt="Google" class="w-4 h-4 shrink-0" />
               <span>Google</span>
             </button>
 
             <button
               type="button"
               (click)="authService.loginWithGithub()"
-              class="hover:cursor-pointer flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gray-800 hover:bg-gray-600 border border-gray-600 text-xs font-medium text-white transition-all"
+              class="hover:cursor-pointer flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl bg-[#24292F] hover:bg-[#1b1f23] border border-slate-700 text-xs font-semibold text-white shadow-sm transition-all"
             >
+              <img src="/icons/github-icon.svg" alt="GitHub" class="w-4 h-4 shrink-0" />
               <span>GitHub</span>
             </button>
           </div>

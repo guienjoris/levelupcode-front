@@ -281,13 +281,32 @@ export class QuizRunComponent implements OnInit {
     const id = this.route.snapshot.paramMap.get('id') || '';
     this.quizService.getQuiz(id).subscribe({
       next: (data) => {
-        this.quiz.set(data);
+        this.quiz.set(this.shuffleQuizAnswers(data));
         this.isLoading.set(false);
       },
       error: () => {
         this.isLoading.set(false);
       },
     });
+  }
+
+  private shuffleArray<T>(array: T[]): T[] {
+    const copy = [...array];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+
+  private shuffleQuizAnswers(quiz: QuizDetail): QuizDetail {
+    return {
+      ...quiz,
+      questions: quiz.questions.map((question) => ({
+        ...question,
+        answers: this.shuffleArray(question.answers),
+      })),
+    };
   }
 
   selectAnswer(questionId: string, answerId: string): void {
@@ -353,5 +372,6 @@ export class QuizRunComponent implements OnInit {
   resetQuiz(): void {
     this.selectedAnswers.set({});
     this.submissionResult.set(null);
+    this.quiz.update((q) => (q ? this.shuffleQuizAnswers(q) : null));
   }
 }
